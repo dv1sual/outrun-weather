@@ -1,0 +1,36 @@
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --pink:    #ff2d78;
+  --pink-d:  #c4005a;
+  --cyan:    #00e5ff;
+  --yellow:  #ffe600;
+  --orange:  #ff6b35;
+  --purple:  #7b2fbe;
+  --purple-d:#3a0070;
+  --dark:    #0d0021;
+  --darker:  #07000f;
+  --font:    'Press Start 2P', monospace;
+}
+
+html, body {
+  background: var(--darker);
+  color: var(--yellow);
+  font-family: var(--font);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+#app {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+}
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(--darker); }
+::-webkit-scrollbar-thumb { background: var(--pink); }

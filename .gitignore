@@ -1,0 +1,6 @@
+node_modules/
+retro_weather_frontend/dist/
+retro_weather_backend/target/
+retro_weather_backend/.env
+retro_weather_backend/weather_cache.db
+package-lock.json
