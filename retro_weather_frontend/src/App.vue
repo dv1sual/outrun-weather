@@ -4,11 +4,13 @@
   <div class="scene" aria-hidden="true">
     <!-- Sun with stripe overlay -->
     <div class="sun"></div>
-    <!-- Horizon glow bar -->
-    <div class="horizon"></div>
-    <!-- Road perspective stripes -->
+    <!-- Road (classic Out Run perspective) -->
     <div class="road">
-      <div class="road-center"></div>
+      <div class="road-bed">
+        <div class="road-edge road-edge--l"></div>
+        <div class="road-edge road-edge--r"></div>
+        <div class="road-center"></div>
+      </div>
     </div>
     <!-- Palm tree silhouettes -->
     <div class="palm palm--l">
@@ -143,18 +145,23 @@
 
     <!-- Score footer -->
     <footer class="footer">
-      <div class="score-row">
+      <div class="foot-score foot-tl">
         <span class="score-lbl">SCORE</span>
         <span class="score-val">{{ score }}</span>
-        <span class="score-lbl" style="margin-left:2rem">TIME</span>
+      </div>
+      <div class="foot-score foot-tr">
+        <span class="score-lbl">TIME</span>
         <span class="score-val cyan">{{ elapsed }}</span>
       </div>
-      <div class="insert-coin">
+      <div class="insert-coin foot-bl">
         <span class="blink">&#9632;</span>
         INSERT COIN TO CONTINUE
         <span class="blink">&#9632;</span>
       </div>
-      <div class="credits">POWERED BY OPENWEATHERMAP · RUST/ACTIX-WEB</div>
+      <div class="credits foot-br">
+        POWERED BY OPENWEATHERMAP · RUST/ACTIX-WEB
+        <span class="handle">@DV1SUAL</span>
+      </div>
     </footer>
 
   </div>
@@ -300,53 +307,85 @@ function icon(description) {
   border-radius: 50%;
 }
 
-/* Horizon glow */
-.horizon {
-  position: absolute;
-  left: 0; right: 0;
-  top: 73%;
-  height: 3px;
-  background: #ffe600;
-  box-shadow: 0 0 30px 8px rgba(255,230,0,0.6), 0 0 80px 20px rgba(255,107,53,0.4);
-}
-
-/* Road */
+/* Road container — spans the dark ground band. overflow:hidden clips the bed
+   exactly at the top (75% = the sky/ground boundary), so the road's vanishing
+   point sits right on the horizon. */
 .road {
   position: absolute;
   left: 0; right: 0;
-  top: 73%;
+  top: 75%;
   bottom: 0;
+  overflow: hidden;
+  perspective: 18vh;
+  perspective-origin: 50% 0%;
+}
+
+/* Road bed — a constant-width grey band laid into perspective → a trapezoid that
+   is wide in the foreground and converges at the horizon. Deep + steep so the far
+   edge overshoots the top and gets clipped right on the horizon line. */
+.road-bed {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 68%;
+  margin-left: -34%;
+  height: 780%;
+  transform-origin: 50% 100%;
+  transform: rotateX(87.4deg);
   background: repeating-linear-gradient(
     to bottom,
-    #ff2d78  0px, #ff2d78  2px,
-    #1a0030  2px, #1a0030  16px,
-    #ff2d78 16px, #ff2d78  17px,
-    #2d0050 17px, #2d0050  38px
+    #07000f 0 38px,       /* black */
+    #2d0050 38px 76px     /* dark purple */
   );
-  background-size: 100% 38px;
-  animation: road-scroll 6s linear infinite;
-  overflow: hidden;
+  background-size: 100% 76px;
+  box-shadow: 0 0 24px rgba(0,0,0,0.55);
+  animation: road-stripes 1.25s linear infinite;
 }
 
-@keyframes road-scroll {
-  from { background-position: 0 0; }
-  to   { background-position: 0 38px; }
+@keyframes road-stripes {
+  from { background-position: 0 0;    }
+  to   { background-position: 0 76px; }
 }
 
-/* Dashed centre line */
+/* Red-and-white rumble strips on each edge */
+.road-edge {
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 9%;
+  background: repeating-linear-gradient(
+    to bottom,
+    #ffffff 0 38px,
+    #e8112d 38px 76px
+  );
+  background-size: 100% 76px;
+  animation: road-rumble 1.25s linear infinite;
+}
+.road-edge--l { left: 0; }
+.road-edge--r { right: 0; }
+
+@keyframes road-rumble {
+  from { background-position: 0 0;    }
+  to   { background-position: 0 76px; }
+}
+
+/* Dashed white centre line */
 .road-center {
   position: absolute;
   left: 50%; top: 0; bottom: 0;
-  width: 4px;
+  width: 4.5%;
   transform: translateX(-50%);
   background: repeating-linear-gradient(
     to bottom,
-    #ffe600 0px, #ffe600 12px,
-    transparent 12px, transparent 28px
+    #ffe600 0 90px,            /* long yellow dash */
+    transparent 90px 220px     /* big gap → fewer dashes */
   );
-  background-size: 100% 28px;
-  animation: road-scroll 6s linear infinite;
-  opacity: 0.5;
+  background-size: 100% 220px;
+  animation: road-dash 3.6s linear infinite;
+}
+
+@keyframes road-dash {
+  from { background-position: 0 0;     }
+  to   { background-position: 0 220px; }
 }
 
 /* Palm trees */
@@ -666,18 +705,24 @@ function icon(description) {
 .t-sep { color: rgba(255,255,255,0.3); }
 
 /* ── Footer ──────────────────────────────────────────────────────────────── */
-.footer {
-  margin-top: 2rem;
-  border-top: 2px solid rgba(255,45,120,0.3);
-  padding-top: 1.5rem;
-  text-align: center;
-}
+/* Footer items are pinned to the four corners of the browser window like an
+   arcade HUD. display:contents removes the wrapper box so it takes no flow space. */
+.footer { display: contents; }
 
-.score-row {
-  font-size: 0.6rem;
+.foot-tl, .foot-tr, .foot-bl, .foot-br {
+  position: fixed;
+  z-index: 3;
+  pointer-events: none;
+}
+.foot-tl { top: 1rem;    left: 1.25rem;  }
+.foot-tr { top: 1rem;    right: 1.25rem; text-align: right; }
+.foot-bl { bottom: 1rem; left: 1.25rem;  }
+.foot-br { bottom: 1rem; right: 1.25rem; text-align: right; max-width: 45vw; }
+
+.foot-score {
+  font-size: 0.85rem;
   color: var(--yellow);
   text-shadow: 0 0 8px var(--yellow);
-  margin-bottom: 1rem;
   letter-spacing: 0.1em;
 }
 
@@ -689,7 +734,6 @@ function icon(description) {
   font-size: 0.5rem;
   letter-spacing: 0.15em;
   text-shadow: 0 0 8px var(--pink);
-  margin-bottom: 1rem;
 }
 
 .credits {
@@ -698,6 +742,13 @@ function icon(description) {
   letter-spacing: 0.12em;
   text-shadow: 0 0 6px rgba(0,229,255,0.5);
   opacity: 0.75;
+}
+
+.handle {
+  color: var(--pink);
+  margin-left: 0.5rem;
+  opacity: 1;
+  text-shadow: 0 0 6px rgba(255,45,120,0.6);
 }
 
 /* ── Blink ───────────────────────────────────────────────────────────────── */
@@ -717,5 +768,23 @@ function icon(description) {
   .title-weather { font-size: 1rem; }
   .stats { grid-template-columns: repeat(2, 1fr); }
   .stages { grid-template-columns: 1fr; }
+
+  /* Shrink the corner HUD and pull it tight to the edges so it can't crowd
+     the title or the search card on narrow windows. */
+  .foot-score  { font-size: 0.6rem; }
+  .insert-coin { font-size: 0.4rem; }
+  .credits     { font-size: 0.32rem; }
+  .foot-tl, .foot-tr { top: 0.5rem; }
+  .foot-bl, .foot-br { bottom: 0.5rem; }
+  .foot-tl, .foot-bl { left: 0.6rem; }
+  .foot-tr, .foot-br { right: 0.6rem; }
+}
+
+/* On short windows the bottom HUD would ride up into the content — drop the
+   long credits line and keep only the essentials so nothing overlaps. */
+@media (max-height: 560px) {
+  .foot-score  { font-size: 0.55rem; }
+  .insert-coin { font-size: 0.38rem; }
+  .foot-br     { display: none; }
 }
 </style>
